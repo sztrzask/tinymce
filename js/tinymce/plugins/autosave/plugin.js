@@ -35,11 +35,16 @@ tinymce._beforeUnloadHandler = function() {
 tinymce.PluginManager.add('autosave', function(editor) {
 	var settings = editor.settings, LocalStorage = tinymce.util.LocalStorage, prefix, started;
 
-	prefix = settings.autosave_prefix || 'tinymce-autosave-{path}{query}-{id}-';
-	prefix = prefix.replace(/\{path\}/g, document.location.pathname);
-	prefix = prefix.replace(/\{query\}/g, document.location.search);
-	prefix = prefix.replace(/\{id\}/g, editor.id);
-
+	function refreshPrefix()
+	{
+		prefix = settings.autosave_prefix || 'tinymce-autosave-{path}{query}-{id}-';
+		prefix = prefix.replace(/\{path\}/g, document.location.pathname);
+		prefix = prefix.replace(/\{query\}/g, document.location.search);
+		prefix = prefix.replace(/\{id\}/g, editor.id);
+	}
+	
+	refreshPrefix();
+	
 	function parseTime(time, defaultTime) {
 		var multipels = {
 			s: 1000,
@@ -50,9 +55,18 @@ tinymce.PluginManager.add('autosave', function(editor) {
 
 		return (time[2] ? multipels[time[2]] : 1) * parseInt(time, 10);
 	}
+	
+	function getCurrentPrefix()
+	{
+		return prefix;
+	}
+	
+	function getDraftTime(){
+		return parseInt(LocalStorage.getItem(prefix + "time"), 10) || 0;
+	}
 
 	function hasDraft() {
-		var time = parseInt(LocalStorage.getItem(prefix + "time"), 10) || 0;
+		var time = getDraftTime();
 
 		if (new Date().getTime() - time > settings.autosave_retention) {
 			removeDraft(false);
@@ -61,14 +75,18 @@ tinymce.PluginManager.add('autosave', function(editor) {
 
 		return true;
 	}
-
-	function removeDraft(fire) {
-		LocalStorage.removeItem(prefix + "draft");
-		LocalStorage.removeItem(prefix + "time");
-
+	
+	function removeDraftByPrefix(_prefix, fire)
+	{
+		LocalStorage.removeItem(_prefix + "draft");
+		LocalStorage.removeItem(_prefix + "time");
 		if (fire !== false) {
 			editor.fire('RemoveDraft');
 		}
+	}
+
+	function removeDraft(fire) {
+		removeDraftByPrefix(prefix, fire);
 	}
 
 	function storeDraft() {
@@ -155,8 +173,16 @@ tinymce.PluginManager.add('autosave', function(editor) {
 		});
 	}
 
-	window.onbeforeunload = tinymce._beforeUnloadHandler;
-
+	tinymce._previousBeforeUnloadHandler = window.onbeforeunload || function(){};
+	window.onbeforeunload = function(e){
+		tinymce._beforeUnloadHandler(e);
+		tinymce._previousBeforeUnloadHandler(e);
+	};
+	
+	this.removeDraftByPrefix = removeDraftByPrefix;
+	this.refreshPrefix = refreshPrefix;
+	this.getCurrentPrefix = getCurrentPrefix;
+	this.getDraftTime = getDraftTime;
 	this.hasDraft = hasDraft;
 	this.storeDraft = storeDraft;
 	this.restoreDraft = restoreDraft;
