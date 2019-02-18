@@ -100,7 +100,13 @@ tinymce.PluginManager.add('autosave', function(editor) {
 	
 	function isDraftSameAsContent(){
 		if (hasDraft()){
-			return editor.getContent({format: 'raw', no_events: true}) == LocalStorage.getItem(prefix + "draft");
+		    var caret = '<br data-mce-bogus="1">';
+		    var currentContent =  editor.getContent({format: 'raw', no_events: true});
+		    currentContent = (currentContent || '').replace(caret, '');
+		    var storageContent = LocalStorage.getItem(prefix + "draft");
+		    storageContent = (storageContent || '').replace(caret, '');
+
+		    return currentContent == storageContent;
 		}
 	}
 
