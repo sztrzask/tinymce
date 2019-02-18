@@ -41,6 +41,7 @@ tinymce.PluginManager.add('autosave', function(editor) {
 		prefix = prefix.replace(/\{path\}/g, document.location.pathname);
 		prefix = prefix.replace(/\{query\}/g, document.location.search);
 		prefix = prefix.replace(/\{id\}/g, editor.id);
+		prefix = prefix.toLowerCase();
 	}
 	
 	refreshPrefix();
