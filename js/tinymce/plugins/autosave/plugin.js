@@ -97,6 +97,12 @@ tinymce.PluginManager.add('autosave', function(editor) {
 			editor.fire('StoreDraft');
 		}
 	}
+	
+	function isDraftSameAsContent(){
+		if (hasDraft()){
+			return editor.getContent({format: 'raw', no_events: true}) == LocalStorage.getItem(prefix + "draft");
+		}
+	}
 
 	function restoreDraft() {
 		if (hasDraft()) {
@@ -193,4 +199,5 @@ tinymce.PluginManager.add('autosave', function(editor) {
 	this.restoreDraft = restoreDraft;
 	this.removeDraft = removeDraft;
 	this.isEmpty = isEmpty;
+	this.isDraftSameAsContent = isDraftSameAsContent;
 });
