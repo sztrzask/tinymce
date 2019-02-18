@@ -138,6 +138,10 @@ tinymce.PluginManager.add('autosave', function(editor) {
 		removeDraft();
 		editor.undoManager.add();
 	}
+	
+	editor.on('init', function(){
+		startStoreDraft();
+	});
 
 	editor.addButton('restoredraft', {
 		title: 'Restore last draft',
